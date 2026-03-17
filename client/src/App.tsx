@@ -700,15 +700,15 @@ const InvoiceView: React.FC<{
                     <div style={{width: '300px'}}>
                         <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px', padding: '0 12px'}}>
                             <span style={{color: '#666'}}>Subtotal:</span>
-                            <span>${car.price.toLocaleString()}.00</span>
+                            <span>₹{car.price.toLocaleString()}.00</span>
                         </div>
                         <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px', padding: '0 12px'}}>
                             <span style={{color: '#666'}}>Tax (8%):</span>
-                            <span>${taxAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                            <span>₹{taxAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                         </div>
                         <div style={{display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #333', padding: '12px', fontSize: '18px', fontWeight: 'bold', backgroundColor: '#f3f4f6', marginTop: '10px'}}>
                             <span>Total:</span>
-                            <span>${totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                            <span>₹{totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                         </div>
                     </div>
                 </div>
