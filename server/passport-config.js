@@ -16,19 +16,35 @@ const configurePassport = () => {
     }
   });
 
-  // Guard: skip Google strategy if credentials are missing to avoid crashing the server
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  const googleClientId = process.env.GOOGLE_CLIENT_ID;
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  console.log("🔍 DEBUG: GOOGLE_CLIENT_ID =", googleClientId);
+  console.log(
+    "🔍 DEBUG: GOOGLE_CLIENT_SECRET =",
+    googleClientSecret ? "SET" : "NOT SET"
+  );
+
+  // Guard: skip Google strategy if credentials are missing
+  if (
+    !googleClientId ||
+    !googleClientSecret ||
+    googleClientId === "your-google-client-id" ||
+    googleClientSecret === "your-google-client-secret"
+  ) {
     console.warn(
-      "⚠️  GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set. Google OAuth will be disabled."
+      "⚠️  Google OAuth credentials not configured properly. Google authentication will not be available."
     );
     return;
   }
 
+  console.log("✅ Google OAuth credentials found, registering strategy");
+
   passport.use(
     new GoogleStrategy(
       {
-        clientID: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        clientID: googleClientId,
+        clientSecret: googleClientSecret,
         callbackURL: `${process.env.BACKEND_URL}/api/auth/google/callback`,
       },
       async (accessToken, refreshToken, profile, done) => {
@@ -49,7 +65,7 @@ const configurePassport = () => {
           if (email) {
             user = await User.findOne({ email });
             if (user) {
-              // Link Google account to existing user
+              // If user exists but doesn't have Google ID, link the accounts
               user.googleId = profile.id;
               if (!user.fullName || user.fullName === "Google User") {
                 user.fullName = profile.displayName || "Google User";
