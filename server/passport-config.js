@@ -16,6 +16,14 @@ const configurePassport = () => {
     }
   });
 
+  // Guard: skip Google strategy if credentials are missing to avoid crashing the server
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.warn(
+      "⚠️  GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set. Google OAuth will be disabled."
+    );
+    return;
+  }
+
   passport.use(
     new GoogleStrategy(
       {
