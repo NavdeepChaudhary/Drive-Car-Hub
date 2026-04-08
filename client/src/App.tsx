@@ -781,9 +781,9 @@ const HomeView: React.FC<{
             }
             // Price filter
             if (searchParams.priceRange) {
-                if (searchParams.priceRange === '<50000' && car.price >= 50000) return false;
-                if (searchParams.priceRange === '50000-100000' && (car.price < 50000 || car.price > 100000)) return false;
-                if (searchParams.priceRange === '>100000' && car.price <= 100000) return false;
+                if (searchParams.priceRange === '<500000' && car.price >= 500000) return false;
+                if (searchParams.priceRange === '500000-1000000' && (car.price < 500000 || car.price > 1000000)) return false;
+                if (searchParams.priceRange === '>1000000' && car.price <= 1000000) return false;
             }
             return true;
         });
@@ -823,9 +823,9 @@ const HomeView: React.FC<{
                                 </select>
                                 <select name="priceRange" value={searchParams.priceRange} onChange={handleSearchChange} className="input-field" >
                                     <option value="">Price Range</option>
-                                    <option value="<50000">Below ₹2Lakhs - ₹5 Lakhs</option>
-                                    <option value="50000-100000">₹5L - ₹10Lakhs</option>
-                                    <option value=">100000">Over ₹10Lakhs</option>
+                                    <option value="<500000">Below ₹5 Lakhs</option>
+                                    <option value="500000-1000000">₹5L - ₹10 Lakhs</option>
+                                    <option value=">1000000">Over ₹10 Lakhs</option>
                                 </select>
                                 <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <SearchSvg style={{ width: '20px', height: '20px', marginRight: '8px', color: '#fff' }} />
