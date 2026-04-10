@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.13.23",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

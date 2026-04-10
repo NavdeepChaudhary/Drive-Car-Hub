@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useUser, useClerk, useAuth, SignIn, SignUp } from '@clerk/clerk-react';
 import AdminPage from './components/AdminPage';
 import SellCarPage from './components/SellCarPage';
 
@@ -1098,165 +1099,38 @@ const GoogleSvg = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const AuthView: React.FC<{
-    onLogin: () => void;
-    onSignUp: (fullName: string, email: string, pass: string, mobileNumber?: string) => Promise<{ success: boolean, error?: string }>;
-    onLoginAttempt: (email: string, pass: string) => Promise<{ success: boolean, error?: string }>;
     setView: (v: View) => void;
-}> = ({ onLogin, onSignUp, onLoginAttempt, setView }) => {
-
+}> = ({ setView }) => {
     const [isLoginView, setIsLoginView] = useState(true);
-    const [fullName, setFullName] = useState('');
-    const [email, setEmail] = useState('');
-    const [mobileNumber, setMobileNumber] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-
-        if (!isLoginView) {
-            if (!fullName.trim()) {
-                setError('Full name is required.');
-                return;
-            }
-            if (password.length < 6) {
-                setError('Password must be at least 6 characters.');
-                return;
-            }
-            if (password !== confirmPassword) {
-                setError('Password and confirm password must match.');
-                return;
-            }
-            const cleanedMobile = mobileNumber.trim();
-            if (cleanedMobile && !/^[6-9]\d{9}$/.test(cleanedMobile)) {
-                setError('Mobile number must be 10 digits and start with 6, 7, 8, or 9.');
-                return;
-            }
-        }
-
-        const result = isLoginView
-            ? await onLoginAttempt(email, password)
-            : await onSignUp(fullName.trim(), email, password, mobileNumber.trim() || undefined);
-        if (!result.success) setError(result.error || 'Authentication failed.');
-    };
-
-    const handleGoogleLogin = () => {
-        // Redirect to backend Google OAuth endpoint
-        window.location.href = `${API_URL.replace('/api', '')}/api/auth/google`;
-    };
 
     return (
-        <main style={{ minHeight: '80vh', backgroundColor: '#111827', color: '#fff', padding: '48px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ maxWidth: '448px', width: '100%', backgroundColor: '#1f2937', padding: '40px', borderRadius: '12px', boxShadow: '0 20px 25px rgba(0, 0, 0, 0.5)', border: '1px solid #9333ea50' }}>
-                <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#c084fc', marginBottom: '8px', textAlign: 'center' }}>{isLoginView ? 'Welcome Back' : 'Create Account'}</h2>
-                {error && <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ef4444', color: '#fff', marginBottom: '16px', textAlign: 'center' }}>{error}</div>}
-
-                {/* Google Sign-In Button */}
-                <button
-                    onClick={handleGoogleLogin}
-                    style={{
-                        width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #4b5563',
-                        backgroundColor: '#fff', color: '#374151', fontWeight: '600', fontSize: '15px',
-                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        gap: '12px', marginBottom: '20px', transition: 'all 0.2s',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)'; }}
-                >
-                    <GoogleSvg />
-                    <span>{isLoginView ? 'Sign in with Google' : 'Sign up with Google'}</span>
-                </button>
-
-                {/* Divider */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-                    <div style={{ flex: 1, height: '1px', backgroundColor: '#4b5563' }}></div>
-                    <span style={{ color: '#9ca3af', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>or</span>
-                    <div style={{ flex: 1, height: '1px', backgroundColor: '#4b5563' }}></div>
-                </div>
-
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {!isLoginView && (
-                        <input type="text" placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="input-field" />
-                    )}
-                    <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} required className="input-field" />
-                    {!isLoginView && (
-                        <input
-                            type="tel"
-                            placeholder="Mobile Number (Optional)"
-                            value={mobileNumber}
-                            onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                            className="input-field"
-                        />
-                    )}
-                    <div style={{ position: 'relative' }}>
-                        <input
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder={isLoginView ? 'Password' : 'Password (Min 6 Characters)'}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="input-field"
-                            style={{ width: '100%', paddingRight: '44px' }}
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(prev => !prev)}
-                            aria-label={showPassword ? 'Hide password' : 'Show password'}
-                            style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', color: '#c4b5fd', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                            {showPassword ? <EyeOffSvg style={{ width: '18px', height: '18px' }} /> : <EyeSvg style={{ width: '18px', height: '18px' }} />}
-                        </button>
-                    </div>
-                    {!isLoginView && (
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                placeholder="Confirm Password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                className="input-field"
-                                style={{ width: '100%', paddingRight: '44px' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(prev => !prev)}
-                                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
-                                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', color: '#c4b5fd', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                                {showConfirmPassword ? <EyeOffSvg style={{ width: '18px', height: '18px' }} /> : <EyeSvg style={{ width: '18px', height: '18px' }} />}
-                            </button>
-                        </div>
-                    )}
-                    <button type="submit" className="btn-primary" style={{ backgroundColor: '#9333ea' }}>{isLoginView ? 'Log In' : 'Sign Up'}</button>
-                </form>
-                <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                    <button
-                        onClick={() => {
-                            setIsLoginView(!isLoginView);
-                            setError(null);
-                            setFullName('');
-                            setEmail('');
-                            setMobileNumber('');
-                            setPassword('');
-                            setConfirmPassword('');
-                            setShowPassword(false);
-                            setShowConfirmPassword(false);
-                        }}
-                        style={{ color: '#c084fc', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-                    >
-                        {isLoginView ? 'Need an account? Sign Up' : 'Have an account? Log In'}
-                    </button>
-                </div>
+        <main style={{ minHeight: '80vh', backgroundColor: '#111827', color: '#fff', padding: '48px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <button 
+                onClick={() => setIsLoginView(!isLoginView)} 
+                style={{ marginBottom: '20px', backgroundColor: 'transparent', color: '#818cf8', fontWeight: '600', textDecoration: 'underline', border: 'none', cursor: 'pointer' }}
+            >
+                {isLoginView ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+            </button>
+            
+            <div style={{ transform: 'scale(1.1)' }}>
+                {isLoginView ? (
+                    <SignIn routing="hash" />
+                ) : (
+                    <SignUp routing="hash" />
+                )}
             </div>
+            
+            <button 
+                onClick={() => setView('home')} 
+                style={{ marginTop: '30px', color: '#9ca3af', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+            >
+                Back to Home
+            </button>
         </main>
     );
 };
+
+
 
 const AdminAuthView: React.FC<{
     onAdminLogin: (email: string, pass: string) => Promise<{ success: boolean, error?: string }>;
@@ -1377,7 +1251,22 @@ const App = () => {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [itemToBuy, setItemToBuy] = useState<CarListing | null>(null);
 
-    const { currentUser, signUp, logIn, adminLogIn, logOut, fetchUserEmail, setGoogleUser } = useUserState();
+    const { user: clerkUser, isLoaded, isSignedIn } = useUser();
+    const { signOut } = useClerk();
+    const { getToken } = useAuth();
+    
+    // Construct currentUser from Clerk state
+    const currentUser: AppUser | null = useMemo(() => {
+        if (!isLoaded || !isSignedIn || !clerkUser) return null;
+        return {
+            uid: clerkUser.id,
+            email: clerkUser.primaryEmailAddress?.emailAddress || '',
+            fullName: clerkUser.fullName || '',
+            isAdmin: clerkUser.primaryEmailAddress?.emailAddress === 'navdeepsinghchaudhary1@gmail.com' // Hardcoded admin for now
+        };
+    }, [clerkUser, isLoaded, isSignedIn]);
+
+    const { signUp, logIn, adminLogIn, logOut, fetchUserEmail, setGoogleUser } = useUserState(); // Will remove these later
     const { listings, addOrUpdateListing, deleteListing, purchaseListing, fetchListings } = useListingsState();
     const { fetchThreads, fetchMessages, findOrCreateChatThread, sendMessage, getMessages, getThreads, getThread } = useChatState();
 
@@ -1426,7 +1315,7 @@ const App = () => {
             .slice(0, 5);
     }, [listings]);
 
-    const handleLogout = () => { logOut(); setView('home'); };
+    const handleLogout = () => { signOut(); setView('home'); };
     const handleViewDetail = (car: CarListing) => { setSelectedCar(car); setView('detail'); window.scrollTo(0, 0); };
 
     const handleContactSeller = async (listing: CarListing, buyer: AppUser) => {
@@ -1478,7 +1367,7 @@ const App = () => {
                 {view === 'user-dashboard' && currentUser && !currentUser.isAdmin && <UserDashboardView user={currentUser} setView={setView} onViewDetail={handleViewDetail} onLogout={handleLogout} />}
                 {view === 'listings' && <ListingsView listings={listings} currentUserId={currentUser?.uid || null} onViewDetail={handleViewDetail} />}
                 {view === 'sell' && <SellCarPage currentUser={currentUser} onBack={() => setView('home')} />}
-                {view === 'auth' && <AuthView onLogin={() => setView('user-dashboard')} onSignUp={async (n, e, p, m) => { const res = await signUp(n, e, p, m); if (res.success) setView('user-dashboard'); return res; }} onLoginAttempt={async (e, p) => { const res = await logIn(e, p); if (res.success) setView('user-dashboard'); return res; }} setView={setView} />}
+                {view === 'auth' && <AuthView setView={setView} />}
                 {view === 'admin-auth' && <AdminAuthView onAdminLogin={async (e, p) => { const res = await adminLogIn(e, p); if (res.success) setView('admin'); return res; }} setView={setView} />}
                 {view === 'detail' && selectedCar && <CarDetailView car={selectedCar} onBack={() => setView('listings')} currentUser={currentUser} onContactSeller={handleContactSeller} onBuyNow={handleBuyNow} />}
                 {view === 'inbox' && currentUser && <InboxView threads={getThreads(currentUser.uid)} currentUser={currentUser} onViewThread={handleViewThread} />}

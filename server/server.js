@@ -4,8 +4,6 @@ dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import session from "express-session";
-import passport from "passport";
 import cloudinary from "cloudinary";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
@@ -14,7 +12,6 @@ import Listing from "./models/Listing.js";
 import User from "./models/User.js";
 import Thread from "./models/Thread.js";
 import Message from "./models/Message.js";
-import configurePassport from "./passport-config.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,25 +41,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Session middleware (required for Passport)
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "fallback-secret-key",
-    resave: false,
-    saveUninitialized: false,
-    proxy: process.env.NODE_ENV === "production", // Trust the reverse proxy
-    cookie: {
-      secure: process.env.NODE_ENV === "production", // true in production
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
-    },
-  })
-);
-
-// Passport middleware
-configurePassport();
-app.use(passport.initialize());
-app.use(passport.session());
+// Auth middleware placeholder (Clerk handles this now)
 
 const sanitizeUser = (userDoc) => {
   const user = userDoc.toObject ? userDoc.toObject() : userDoc;
@@ -622,46 +601,7 @@ app.get("/api/chat/messages/:threadId", async (req, res) => {
 });
 
 // --- Google OAuth Routes ---
-const oauthGuard = (req, res, next) => {
-  const googleClientId = process.env.GOOGLE_CLIENT_ID;
-  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
-  if (
-    !googleClientId ||
-    !googleClientSecret ||
-    googleClientId === "your-google-client-id" ||
-    googleClientSecret === "your-google-client-secret"
-  ) {
-    return res.status(503).json({ error: "Google OAuth is not configured on this server." });
-  }
-  next();
-};
-
-app.get(
-  "/api/auth/google",
-  oauthGuard,
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
-app.get(
-  "/api/auth/google/callback",
-  oauthGuard,
-  passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL || "http://localhost:5173"}?auth=failed` }),
-  (req, res) => {
-    // Successful authentication — redirect to frontend with user info
-    const user = req.user;
-    const userData = {
-      uid: user.uid,
-      email: user.email,
-      fullName: user.fullName,
-      mobileNumber: user.mobileNumber,
-    };
-    const encodedUser = encodeURIComponent(JSON.stringify(userData));
-    res.redirect(
-      `${process.env.FRONTEND_URL || "http://localhost:5173"}?google_auth=${encodedUser}`
-    );
-  }
-);
+// Clerk is now handling authentication.
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
